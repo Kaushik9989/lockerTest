@@ -180,7 +180,7 @@
                     data-locker-index="<%= i %>">
                    
                     <td><%= i + 1 %></td> <!-- display starts from 1 -->
-                    <td class="status-cell">
+                    <td class="status-cell">+
                       <span class="status-text text-muted">Unknown</span>
                     </td>
                   </tr>
@@ -270,15 +270,24 @@
         statusTextEl.classList.remove("status-text-locked", "status-text-unlocked", "text-muted");
 
         // Clear previous coloring
-        row.classList.remove("locker-row-locked", "locker-row-unlocked");
+// Clear previous colors
+row.querySelectorAll("td").forEach(td => {
+  td.style.backgroundColor = "";
+});
 
-        if (state === "Locked") {
-          row.classList.add("locker-row-locked");
-          statusTextEl.classList.add("status-text-locked");
-        } else {
-          row.classList.add("locker-row-unlocked");
-          statusTextEl.classList.add("status-text-unlocked");
-        }
+// Apply new color based on state
+if (state === "Locked") {
+  row.querySelectorAll("td").forEach(td => {
+    td.style.backgroundColor = "rgba(248,113,113,0.18)"; // red
+  });
+  statusTextEl.classList.add("status-text-locked");
+} else {
+  row.querySelectorAll("td").forEach(td => {
+    td.style.backgroundColor = "rgba(34,197,94,0.18)"; // green
+  });
+  statusTextEl.classList.add("status-text-unlocked");
+}
+
       });
     });
   </script>
