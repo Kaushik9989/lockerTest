@@ -22,12 +22,7 @@
     }
 
     .app-header {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      padding: 10px 0 16px;
-      background: linear-gradient(to bottom, rgba(15,23,42,0.98), rgba(15,23,42,0.95));
-      backdrop-filter: blur(10px);
+      padding: 10px 0 12px;
     }
 
     .app-title {
@@ -47,19 +42,6 @@
       color: #bbf7d0;
     }
 
-    .main-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-      gap: 16px;
-      align-items: flex-start;
-    }
-
-    @media (max-width: 768px) {
-      .main-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
     .card-glass {
       background: radial-gradient(circle at top left, #1f2937, #020617);
       border-radius: 18px;
@@ -69,37 +51,7 @@
     }
 
     .card-body {
-      padding: 18px;
-    }
-
-    .form-select {
-      background-color: #020617;
-      color: #e5e7eb;
-      border-radius: 10px;
-      padding: 10px 12px;
-      border: 1px solid #4b5563;
-    }
-
-    .btn-lg-touch {
-      height: 54px;
-      font-size: 1rem;
-      font-weight: 600;
-      border-radius: 999px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      border: none;
-    }
-
-    .btn-unlock {
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-      box-shadow: 0 12px 25px rgba(34,197,94,0.45);
-    }
-
-    #actionResult {
-      min-height: 22px;
-      font-size: 0.8rem;
+      padding: 14px 14px 10px;
     }
 
     .status-pill {
@@ -109,6 +61,8 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
+      font-size: 0.75rem;
+      color: #e5e7eb;
     }
 
     .status-dot {
@@ -118,163 +72,134 @@
       background-color: #22c55e;
     }
 
-    .status-locked-badge {
-      padding: 2px 8px;
-      border-radius: 99px;
-      font-size: 0.7rem;
-      border: 1px solid #f97373;
-      background: rgba(248,113,113,0.16);
+    .table {
+      margin-bottom: 0;
+      border-color: rgba(31,41,55,0.9);
+      color: #e5e7eb;
+      font-size: 0.85rem;
     }
 
-    .status-unlocked-badge {
-      padding: 2px 8px;
-      border-radius: 99px;
-      font-size: 0.7rem;
-      border: 1px solid #4ade80;
-      background: rgba(34,197,94,0.18);
+    .table thead {
+      background: rgba(15,23,42,0.95);
+    }
+
+    .table thead th {
+      border-bottom: 1px solid rgba(55,65,81,0.9);
+    }
+
+    .table tbody td {
+      border-color: rgba(31,41,55,0.9);
+      vertical-align: middle;
+    }
+
+    .locker-row {
+      cursor: pointer;
+      transition: background-color 0.15s ease, transform 0.05s ease;
+    }
+
+    .locker-row:hover {
+      transform: translateY(-1px);
+      background-color: rgba(148,163,184,0.1);
+    }
+
+    .locker-row-unlocked {
+      background-color: rgba(34,197,94,0.18) !important;   /* green */
+    }
+
+    .locker-row-locked {
+      background-color: rgba(248,113,113,0.18) !important; /* red */
+    }
+
+    .status-text {
+      font-weight: 600;
+    }
+
+    .status-text-locked {
+      color: #fecaca;
+    }
+
+    .status-text-unlocked {
+      color: #bbf7d0;
+    }
+
+    #actionResult {
+      min-height: 20px;
+      font-size: 0.8rem;
+      color: #9ca3af;
     }
   </style>
 </head>
 
 <body>
   <div class="app-shell">
-
     <!-- Header -->
     <header class="app-header">
-      <div class="d-flex justify-content-between">
+      <div class="d-flex justify-content-between align-items-center">
         <div>
           <div class="app-title">
             NCU12L Locker Control <span class="chip">Tablet Mode</span>
           </div>
-          <div class="text-muted small">Control and monitor all compartments in real time.</div>
+          <div class="text-muted small">Tap a row to unlock that locker.</div>
         </div>
-
-        <div class="d-none d-md-block small text-end">
+        <div class="small text-end">
           Connection: <span id="connState">Unknown</span>
         </div>
       </div>
     </header>
 
-    <!-- Main body -->
-    <main class="mt-3 main-grid">
+    <!-- Full-page table -->
+    <section class="card-glass">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="small text-muted">
+            Board address + locker index (starting from 1).
+          </div>
+          <div class="status-pill">
+            <span class="status-dot"></span>
+            <span>Polling via Socket.IO</span>
+          </div>
+        </div>
 
-      <!-- LEFT PANEL (Controls) -->
-      <section class="card-glass">
-        <div class="card-body">
-          <h6 class="text-uppercase small text-muted">Controls</h6>
+        <div id="actionResult" class="mb-1 small"></div>
 
-          <div class="mb-2 small text-muted">Choose a board address and locker to unlock.</div>
-
-          <div class="row g-3">
-
-            <div class="col-6 col-md-12">
-              <label class="form-label">Board Address</label>
-              <select id="addrSelect" class="form-select">
-                <% (addresses || []).forEach(a => { %>
-                  <option value="<%= a %>">0x<%= a.toString(16).toUpperCase().padStart(2, "0") %></option>
-                <% }) %>
-              </select>
-            </div>
-
-            <div class="col-6 col-md-12">
-              <label class="form-label">Compartment</label>
-              <select id="compartmentSelect" class="form-select">
+        <div class="table-responsive" style="max-height: 520px; overflow-y: auto;">
+          <table class="table table-bordered text-center align-middle">
+            <thead>
+              <tr>
+               
+                <th style="width: 25%;">Locker</th>
+                <th style="width: 50%;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="statusTableBody">
+              <% (addresses || []).forEach(addr => { %>
                 <% for (let i = 0; i < lockersCount; i++) { %>
-                  <option value="<%= i %>">Locker <%= i %></option>
+                  <tr
+                    class="locker-row"
+                    data-addr="<%= addr %>"
+                    data-locker-index="<%= i %>">
+                   
+                    <td><%= i + 1 %></td> <!-- display starts from 1 -->
+                    <td class="status-cell">
+                      <span class="status-text text-muted">Unknown</span>
+                    </td>
+                  </tr>
                 <% } %>
-              </select>
-            </div>
-
-            <!-- Only Unlock Button (Lock removed) -->
-            <div class="col-12">
-              <button id="unlockBtn" class="btn btn-lg-touch btn-unlock w-100">
-                🔓 Unlock
-              </button>
-            </div>
-
-          </div>
-
-          <div id="actionResult" class="mt-3 small"></div>
+              <% }) %>
+            </tbody>
+          </table>
         </div>
-      </section>
-
-      <!-- RIGHT PANEL (Status) -->
-      <section class="card-glass">
-        <div class="card-body">
-          <h6 class="text-uppercase small text-muted mb-2">Live Status</h6>
-
-          <div class="d-flex justify-content-between mb-2 small">
-            <span>Tap a row to quickly select locker</span>
-            <span class="status-pill"><span class="status-dot"></span> Polling</span>
-          </div>
-
-          <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
-            <table class="table table-bordered text-center">
-              <thead>
-                <tr>
-                  <th>Addr</th>
-                  <th>Locker</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="statusTableBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-    </main>
+      </div>
+    </section>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-
   <script>
-    const addrSelect = document.getElementById("addrSelect");
-    const compartmentSelect = document.getElementById("compartmentSelect");
-    const unlockBtn = document.getElementById("unlockBtn");
-    const actionResult = document.getElementById("actionResult");
-    const statusTableBody = document.getElementById("statusTableBody");
     const connState = document.getElementById("connState");
+    const actionResult = document.getElementById("actionResult");
+    const rows = document.querySelectorAll(".locker-row");
 
-    const statusMap = {};
-
-    function renderStatusTable() {
-      statusTableBody.innerHTML = "";
-
-      const keys = Object.keys(statusMap).sort((a, b) => {
-        const [addrA, lockerA] = a.split("-").map(Number);
-        const [addrB, lockerB] = b.split("-").map(Number);
-        return addrA !== addrB ? addrA - addrB : lockerA - lockerB;
-      });
-
-      keys.forEach(key => {
-        const { addr, locker, status } = statusMap[key];
-        const tr = document.createElement("tr");
-
-        tr.onclick = () => {
-          addrSelect.value = addr;
-          compartmentSelect.value = locker;
-          actionResult.textContent =
-            `Selected 0x${addr.toString(16).toUpperCase()} • Locker ${locker}`;
-        };
-
-        const statusBadge = document.createElement("span");
-        statusBadge.textContent = status;
-        statusBadge.className =
-          status === "Locked" ? "status-locked-badge" : "status-unlocked-badge";
-
-        tr.innerHTML = `
-          <td>0x${addr.toString(16).toUpperCase()}</td>
-          <td>${locker}</td>
-        `;
-        const tdStatus = document.createElement("td");
-        tdStatus.appendChild(statusBadge);
-        tr.appendChild(tdStatus);
-
-        statusTableBody.appendChild(tr);
-      });
-    }
-
+    // Helper to call API
     async function callAPI(path, data) {
       try {
         const res = await fetch(path, {
@@ -283,34 +208,78 @@
           body: JSON.stringify(data),
         });
         return res.json();
-      } catch {
+      } catch (err) {
         return { ok: false, error: "Network error" };
       }
     }
 
-    unlockBtn.onclick = async () => {
-      const addr = Number(addrSelect.value);
-      const compartmentId = Number(compartmentSelect.value);
+    // When user taps a row → unlock that locker
+    rows.forEach((row) => {
+      row.addEventListener("click", async () => {
+        const addr = Number(row.dataset.addr);
+        const lockerIndex = Number(row.dataset.lockerIndex); // 0-based for controller
+        const lockerDisplay = lockerIndex + 1; // 1-based for UI
 
-      actionResult.textContent = "Sending unlock...";
-      const res = await callAPI("/api/locker/unlock", { addr, compartmentId });
+        actionResult.textContent =
+          `Sending unlock for 0x${addr.toString(16).toUpperCase()} • Locker ${lockerDisplay}...`;
 
-      actionResult.textContent = res.ok
-        ? `✅ Unlocked 0x${addr.toString(16).toUpperCase()} • Locker ${compartmentId}`
-        : `❌ Error: ${res.error}`;
-    };
+        const res = await callAPI("/api/locker/unlock", {
+          addr,
+          compartmentId: lockerIndex,
+        });
 
-    // Socket live status
-    const socket = io();
-    socket.on("connect", () => { connState.textContent = "Online"; connState.style.color = "#4ade80"; });
-    socket.on("disconnect", () => { connState.textContent = "Offline"; connState.style.color = "#f87171"; });
-
-    socket.on("lockerStatus", ({ addr, status }) => {
-      Object.keys(status).forEach(key => {
-        const locker = key.split("_")[1];
-        statusMap[`${addr}-${locker}`] = { addr, locker, status: status[key] };
+        if (res.ok) {
+          actionResult.textContent =
+            `✅ Unlocked 0x${addr.toString(16).toUpperCase()} • Locker ${lockerDisplay}`;
+        } else {
+          actionResult.textContent = `❌ Error: ${res.error}`;
+        }
       });
-      renderStatusTable();
+    });
+
+    // Socket live status handling
+    const socket = io();
+
+    socket.on("connect", () => {
+      connState.textContent = "Online";
+      connState.style.color = "#4ade80";
+    });
+
+    socket.on("disconnect", () => {
+      connState.textContent = "Offline";
+      connState.style.color = "#f87171";
+    });
+
+    // Expecting: { addr, status: { Lock_0: 'Locked' | 'Unlocked', ... } }
+    socket.on("lockerStatus", ({ addr, status }) => {
+      Object.keys(status).forEach((key) => {
+        const lockerIndex = Number(key.split("_")[1]); // 0-based
+        const lockerDisplay = lockerIndex + 1;
+
+        const row = document.querySelector(
+          `.locker-row[data-addr="${addr}"][data-locker-index="${lockerIndex}"]`
+        );
+        if (!row) return;
+
+        const statusCell = row.querySelector(".status-cell");
+        const statusTextEl = statusCell.querySelector(".status-text");
+        const state = status[key]; // "Locked" or "Unlocked"
+
+        // Update status text
+        statusTextEl.textContent = state;
+        statusTextEl.classList.remove("status-text-locked", "status-text-unlocked", "text-muted");
+
+        // Clear previous coloring
+        row.classList.remove("locker-row-locked", "locker-row-unlocked");
+
+        if (state === "Locked") {
+          row.classList.add("locker-row-locked");
+          statusTextEl.classList.add("status-text-locked");
+        } else {
+          row.classList.add("locker-row-unlocked");
+          statusTextEl.classList.add("status-text-unlocked");
+        }
+      });
     });
   </script>
 </body>

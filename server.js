@@ -180,9 +180,10 @@ function startPollingMultiple(addresses = [0x00, 0x01], intervalMs = 500, ioInst
 app.get("/", (req, res) => {
   // You can pass addresses / number of lockers if you want dynamic
   res.render("lockers", {
-    addresses: [0, 1], // 0x00, 0x01
-    lockersCount: 12,
-  });
+  addresses: [0],
+  lockersCount: 12
+});
+
 });
 
 // API: Unlock
